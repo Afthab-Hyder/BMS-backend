@@ -91,14 +91,35 @@ class Loan(db.Model):
 from flask import request, jsonify
 
 
-# Login route
+# User Login route
 @app.route('/userlogin', methods=['POST'])
 def userlogin():
-    data = request.json
-    user = User.query.filter_by(UserID=data['UserID'])
+    data = request.get_json()
+    user = User.query.filter_by(UserID=data['UserID']).first()
     if user and user.Password == data['Password']:
-        return jsonify({'message': 'Login successful', 'user_id': user.id})
+        return jsonify({'message': 'Login successful', 'UserID': user.UserID})
+    return jsonify({'message': 'Invalid username or password'}), 
+
+
+# Admin Login route
+@app.route('/adminlogin', methods=['POST'])
+def adminlogin():
+    data = request.json
+    admin = User.query.filter_by(AdminID=data['AdminID'])
+    if admin and admin.Password == data['Password']:
+        return jsonify({'message': 'Login successful', 'AdminID': admin.AdminID})
     return jsonify({'message': 'Invalid username or password'}), 401
+
+
+#User Details Route
+@app.route('/history', methods=['GET'])
+def history():
+    id = request.args.get('UserID')
+    print("User id =", id)
+
+    accs = Accounts.query.filter_by(UID=id).all()
+    serialized_accounts = [serialize_account(account) for account in accs]
+    
     
     
     
