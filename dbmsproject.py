@@ -92,7 +92,7 @@ from flask import request, jsonify
 
 
 # User Login route
-@app.route('/userlogin', methods=['POST'])
+@app.route('/api/userlogin', methods=['POST'])
 def userlogin():
     data = request.get_json()
     user = User.query.filter_by(UserID=data['UserID']).first()
