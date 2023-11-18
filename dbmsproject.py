@@ -117,7 +117,7 @@ def adminlogin():
 @app.route('/api/userdetails', methods=['GET'])
 def userdetails():
     data = request.get_json()
-    print("User id =", id)
+    
 
     udetails = User.query.filter_by(UserID=data['UserID']).first()
     ser_det= {'UserID':udetails.UserID,'Name':udetails.Username,'Age':udetails.Age,'Phone':udetails.Phone}
