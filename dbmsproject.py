@@ -162,7 +162,7 @@ def serialize_transaction(trans):
                 'ToAccount':trans.ToAccount,
                 'Type':trans.Type,
                 'Amount':trans.Amount,
-                'Date':trans.Amount,
+                'Date':trans.Date,
     }
     
 def sortfunc(x):
