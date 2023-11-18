@@ -9,7 +9,7 @@ import os
 app = Flask(__name__)
 CORS(app)
 #app.config['SECRET_KEY'] = '5791628bb0b13ce0c676dfde280ba245'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:password@localhost:5432/projectdb'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:pass@localhost:5432/projectdb'
 db = SQLAlchemy(app)
 
 
@@ -125,6 +125,11 @@ def userdetails():
     ser_acc = [serialize_account(account) for account in accdetails]
     return jsonify({'UserDetails':ser_det},{'Accounts':ser_acc}),201
 
+#Logout
+@app.route('/api/logout',methods=['GET'])
+def logout():
+    return jsonify({'message':'logged out'}),200
+
 
 #Transaction History Route
 @app.route('/api/transactions',methods=['GET'])
@@ -160,7 +165,7 @@ def serialize_transaction(trans):
                 'Date':trans.Date,
     }
     
-def sortfunc(x)
+def sortfunc(x):
     return{
            x['Date']
     }
@@ -199,5 +204,4 @@ def initialize_database():
 if __name__=="__main__":
     initialize_database()
     app.run()
-
 
