@@ -99,13 +99,13 @@ def userlogin():
     user = User.query.filter_by(UserID=data['UserID']).first()
     if user and user.Password == data['Password']:
         return jsonify({'message': 'Login successful', 'UserID': user.UserID})
-    return jsonify({'message': 'Invalid username or password'}), 
+    return jsonify({'message': 'Invalid username or password'}),401
 
 #try
 # Admin Login route
-@app.route('/adminlogin', methods=['POST'])
+@app.route('/api/adminlogin', methods=['POST'])
 def adminlogin():
-    data = request.json
+    data = request.get_json()
     admin = User.query.filter_by(AdminID=data['AdminID'])
     if admin and admin.Password == data['Password']:
         return jsonify({'message': 'Login successful', 'AdminID': admin.AdminID})
@@ -115,7 +115,7 @@ def adminlogin():
 #User Details Route
 @app.route('/history', methods=['GET'])
 def history():
-    id = request.args.get('UserID')
+    id = request.get_json()
     print("User id =", id)
 
     accs = Accounts.query.filter_by(UID=id).all()
