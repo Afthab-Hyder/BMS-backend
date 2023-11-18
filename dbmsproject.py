@@ -1,13 +1,13 @@
 from flask import Flask, request
 from flask_sqlalchemy import SQLAlchemy
-#from flask_cors import CORS
+from flask_cors import CORS
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
 from sqlalchemy import and_, or_, not_
 import os
 
 app = Flask(__name__)
-#CORS(app)
+CORS(app)
 #app.config['SECRET_KEY'] = '5791628bb0b13ce0c676dfde280ba245'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:password@localhost:5432/projectdb'
 db = SQLAlchemy(app)
@@ -52,13 +52,15 @@ class Account(db.Model):
 class Transaction(db.Model):
     __tablename__='transactions'
     
+    now=datetime.now().replace(second=0,microsecond=0)
+    
     TransactionID=db.Column(db.Integer,primary_key=True)
     FromAccount=db.Column(db.Integer,db.ForeignKey('accounts.AccountNo'),unique=False,nullable=False)
     ToAccount=db.Column(db.Integer,db.ForeignKey('accounts.AccountNo'),unique=False,nullable=False)
     AdminID=db.Column(db.Integer,db.ForeignKey('admins.AdminID'),unique=False,default=0)
     Type=db.Column(db.String(20),unique=False,nullable=False)
     Amount=db.Column(db.Integer,unique=False,nullable=False)
-    Date=db.Column(db.DateTime,default=datetime.utcnow)
+    Date=db.Column(db.String(30))
     
     def __repr__(self):
         return f"Transaction('{self.TransactionID}')"
@@ -117,15 +119,10 @@ def adminlogin():
 @app.route('/api/userdetails', methods=['GET'])
 def userdetails():
     data = request.get_json()
-    
-
     udetails = User.query.filter_by(UserID=data['UserID']).first()
     ser_det= {'UserID':udetails.UserID,'Name':udetails.Username,'Age':udetails.Age,'Phone':udetails.Phone}
-    
     accdetails=Account.query.filter_by(UID=data['UserID']).all()
-    
     ser_acc = [serialize_account(account) for account in accdetails]
-    
     return jsonify({'UserDetails':ser_det},{'Accounts':ser_acc}),201
 
 
@@ -133,18 +130,15 @@ def userdetails():
 @app.route('/api/transactions',methods=['GET'])
 def transactions():
     data=request.get_json()
-    
     from_trans=Transaction.query.filter_by(FromAccount=data['AccountNo']).all()
     to_trans=Transaction.query.filter_by(ToAccount=data['AccountNo']).all()
-    
     ser_trans_from=[serialize_transaction(transaction) for transaction in from_trans]
     ser_trans_to=[serialize_transaction(transaction) for transaction in to_trans]
-    
     ser_trans_from.extend(ser_trans_to)
+    
     ser_trans_from.sort(key=sortfunc)
 
-    
-    return jsonify({'Transactions':ser_trans})
+    return jsonify({'Transactions':ser_trans_from})
 
 
 
@@ -154,6 +148,7 @@ def serialize_account(account):
                 'Type':account.Type,
                 'Balance':account.Balance       
             }
+    
     
 def serialize_transaction(trans):
     return {
@@ -165,8 +160,10 @@ def serialize_transaction(trans):
                 'Date':trans.Date,
     }
     
-def sortfunc(x):
-    return x.Date
+def sortfunc(x)
+    return{
+           x['Date']
+    }
 
     
 
