@@ -1,13 +1,13 @@
 from flask import Flask, request
 from flask_sqlalchemy import SQLAlchemy
-from flask_cors import CORS
+#from flask_cors import CORS
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
 from sqlalchemy import and_, or_, not_
 import os
 
 app = Flask(__name__)
-CORS(app)
+#CORS(app)
 #app.config['SECRET_KEY'] = '5791628bb0b13ce0c676dfde280ba245'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:password@localhost:5432/projectdb'
 db = SQLAlchemy(app)
@@ -122,7 +122,7 @@ def userdetails():
     udetails = User.query.filter_by(UserID=data['UserID']).first()
     ser_det= {'UserID':udetails.UserID,'Name':udetails.Username,'Age':udetails.Age,'Phone':udetails.Phone}
     
-    accdetails=Account.query.filter_by(UserID=data['UserID']).all()
+    accdetails=Account.query.filter_by(UID=data['UserID']).all()
     
     ser_acc = [serialize_account(account) for account in accdetails]
     
@@ -134,9 +134,15 @@ def userdetails():
 def transactions():
     data=request.get_json()
     
-    trans=Transaction.query.filter_by(or_(FromAccount=data['AccountNo'], ToAcount=data['AccountNo'])).all()
+    from_trans=Transaction.query.filter_by(FromAccount=data['AccountNo']).all()
+    to_trans=Transaction.query.filter_by(ToAccount=data['AccountNo']).all()
     
-    ser_trans=[serialize_transaction(transaction) for transaction in trans]
+    ser_trans_from=[serialize_transaction(transaction) for transaction in from_trans]
+    ser_trans_to=[serialize_transaction(transaction) for transaction in to_trans]
+    
+    ser_trans_from.extend(ser_trans_to)
+    ser_trans_from.sort(key=sortfunc)
+
     
     return jsonify({'Transactions':ser_trans})
 
@@ -146,7 +152,7 @@ def serialize_account(account):
     return {
                 'AccountNo':account.AccountNo,
                 'Type':account.Type,
-                'Balance':account.Balanace       
+                'Balance':account.Balance       
             }
     
 def serialize_transaction(trans):
@@ -158,6 +164,9 @@ def serialize_transaction(trans):
                 'Amount':trans.Amount,
                 'Date':trans.Amount,
     }
+    
+def sortfunc(x):
+    return x.Date
 
     
 
