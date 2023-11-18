@@ -3,6 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
+from sqlalchemy import and_, or_, not_
 import os
 
 app = Flask(__name__)
@@ -113,13 +114,53 @@ def adminlogin():
 
 
 #User Details Route
-@app.route('/history', methods=['GET'])
-def history():
-    id = request.get_json()
+@app.route('/api/userdetails', methods=['GET'])
+def userdetails():
+    data = request.get_json()
     print("User id =", id)
 
-    accs = Accounts.query.filter_by(UID=id).all()
-    serialized_accounts = [serialize_account(account) for account in accs]
+    udetails = User.query.filter_by(UserID=data['UserID']).first()
+    ser_det= {'UserID':udetails.UserID,'Name':udetails.Username,'Age':udetails.Age,'Phone':udetails.Phone}
+    
+    accdetails=Account.query.filter_by(UserID=data['UserID']).all()
+    
+    ser_acc = [serialize_account(account) for account in accdetails]
+    
+    return jsonify({'UserDetails':ser_det},{'Accounts':ser_acc}),201
+
+
+#Transaction History Route
+@app.route('/api/transactions',methods=['GET'])
+def transactions():
+    data=request.get_json()
+    
+    trans=Transaction.query.filter_by(or_(FromAccount=data['AccountNo'], ToAcount=data['AccountNo'])).all()
+    
+    ser_trans=[serialize_transaction(transaction) for transaction in trans]
+    
+    return jsonify({'Transactions':ser_trans})
+
+
+
+def serialize_account(account):
+    return {
+                'AccountNo':account.AccountNo,
+                'Type':account.Type,
+                'Balance':account.Balanace       
+            }
+    
+def serialize_transaction(trans):
+    return {
+                'TransactionID':trans.TransactionID,
+                'FromAccount':trans.FromAccount,
+                'ToAccount':trans.ToAccount,
+                'Type':trans.Type,
+                'Amount':trans.Amount,
+                'Date':trans.Amount,
+    }
+
+    
+
     
     
     
