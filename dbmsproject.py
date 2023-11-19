@@ -134,16 +134,17 @@ def logout():
 #Transaction History Route
 @app.route('/api/transactions',methods=['GET'])
 def transactions():
-    data=request.get_json()
-    from_trans=Transaction.query.filter_by(FromAccount=data['AccountNo']).all()
-    to_trans=Transaction.query.filter_by(ToAccount=data['AccountNo']).all()
+    data=request.args.get('AccountNo')
+    from_trans=Transaction.query.filter_by(FromAccount=data).all()
+    to_trans=Transaction.query.filter_by(ToAccount=data).all()
     ser_trans_from=[serialize_transaction(transaction) for transaction in from_trans]
     ser_trans_to=[serialize_transaction(transaction) for transaction in to_trans]
     ser_trans_from.extend(ser_trans_to)
     
     ser_trans_from.sort(key=sortfunc)
-
-    return jsonify({'Transactions':ser_trans_from})
+    if(from_trans or to_trans):
+        return jsonify({'Transactions':ser_trans_from})
+    return jsonify({'message':'Cant find entries'}),404
 
 
 
