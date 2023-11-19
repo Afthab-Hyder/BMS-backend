@@ -118,12 +118,12 @@ def adminlogin():
 #User Details Route
 @app.route('/api/userdetails', methods=['GET'])
 def userdetails():
-    data = request.get_json()
-    udetails = User.query.filter_by(UserID=data['UserID']).first()
+    data = request.args.get('UserID')
+    udetails = User.query.filter_by(UserID=data).first()
     ser_det= {'UserID':udetails.UserID,'Name':udetails.Username,'Age':udetails.Age,'Phone':udetails.Phone}
-    accdetails=Account.query.filter_by(UID=data['UserID']).all()
+    accdetails=Account.query.filter_by(UID=data).all()
     ser_acc = [serialize_account(account) for account in accdetails]
-    return jsonify({'UserDetails':ser_det},{'Accounts':ser_acc}),201
+    return jsonify({'Userdetails':ser_det},{'Accounts':ser_acc}),201
 
 #Logout
 @app.route('/api/logout',methods=['GET'])
