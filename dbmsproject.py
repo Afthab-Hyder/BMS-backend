@@ -168,7 +168,7 @@ def userpayment():
         fromacc=Account.query.filter_by(AccountNo=data['FromAccount']).first()
         toacc=Account.query.filter_by(AccountNo=data['Toaccount']).first()
         
-        if fromacc==NULL or toacc==NULL:
+        if fromacc==None or toacc==None:
             return jsonify({'message':'Invalid Account Number'}),404
         
         amount=data['Amount']
@@ -216,7 +216,7 @@ def adminpayment():
         fromacc=Account.query.filter_by(AccountNo=data['FromAccount']).first()
         toacc=Account.query.filter_by(AccountNo=data['Toaccount']).first()
         
-        if fromacc==NULL or toacc==NULL:
+        if fromacc==None or toacc==None:
             return jsonify({'message':'Invalid Account Number'}),404
         
         amount=data['Amount']
