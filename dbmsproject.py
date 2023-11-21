@@ -10,7 +10,7 @@ import os
 app = Flask(__name__)
 CORS(app)
 #app.config['SECRET_KEY'] = '5791628bb0b13ce0c676dfde280ba245'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:pass@localhost:5432/projectdb'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:password@localhost:5432/projectdb'
 db = SQLAlchemy(app)
 
 
@@ -157,7 +157,7 @@ def transactions():
     if(from_trans or to_trans):
         return jsonify({'Transactions':ser_trans_from})
     return jsonify({'message':'Cant find entries'}),404
-<<<<<<< HEAD
+
 
 
 
@@ -167,6 +167,10 @@ def userpayment():
         data = request.get_json()
         fromacc=Account.query.filter_by(AccountNo=data['FromAccount']).first()
         toacc=Account.query.filter_by(AccountNo=data['Toaccount']).first()
+        
+        if fromacc==NULL or toacc==NULL:
+            return jsonify({'message':'Invalid Account Number'}),404
+        
         amount=data['Amount']
         balance=fromacc.Balance
     
@@ -202,7 +206,57 @@ def userpayment():
         toacc.Balance=toacc.Balance+amount
         db.session.commit()
         
-        return jsonify({'message':'ITransaction Complete'}),200
+        return jsonify({'message':'Transaction Complete'}),200
+
+
+#Admin Transaction Payment Route
+@app.route('/api/adminpayment',methods=['POST'])
+def adminpayment():
+        data = request.get_json()
+        fromacc=Account.query.filter_by(AccountNo=data['FromAccount']).first()
+        toacc=Account.query.filter_by(AccountNo=data['Toaccount']).first()
+        
+        if fromacc==NULL or toacc==NULL:
+            return jsonify({'message':'Invalid Account Number'}),404
+        
+        amount=data['Amount']
+        admin=data['AdminID']
+        balance=fromacc.Balance
+        
+    
+        if amount>balance:
+            return jsonify({'message':'Insufficient Balance'}),404
+        
+        tid=random.randint(100000,900000)
+        
+        flag=Account.query.filter_by(AccountNo=tid).first()
+        
+        while(flag):
+            tid=random.randint(100000,900000)
+            flag=Account.query.filter_by(AccountNo=tid).first()
+            
+        
+        now=str(datetime.now().replace(second=0,microsecond=0))
+        print(now)
+        trans=Transaction(
+                                TransactionID=tid,
+                                FromAccount=data['FromAccount'],
+                                Toaccount=data['ToAccount'],
+                                AdminID=admin,
+                                Type=data['Type'],
+                                Amount=data['Amount'],
+                                Date=now
+                         )
+        
+        db.session.add(trans)
+        db.session.commit()
+        
+        fromacc.Balance=fromacc.Balance-amount
+        db.session.commit()
+        toacc.Balance=toacc.Balance+amount
+        db.session.commit()
+        
+        return jsonify({'message':'Transaction Complete'}),200
 
         
         
@@ -268,9 +322,5 @@ def initialize_database():
 
 if __name__=="__main__":
     initialize_database()
-<<<<<<< HEAD
     app.run()
-=======
-    app.run()
-
->>>>>>> c3251e0cd9d34b750c72a75b9dfb6093a7e36288
+    
