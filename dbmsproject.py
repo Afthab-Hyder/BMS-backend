@@ -281,11 +281,11 @@ def createuser():
         
         uid=random.randint(100000,900000)
         
-        flag=User.query.filter_by(UserID=tid).first()
+        flag=User.query.filter_by(UserID=uid).first()
         
         while(flag):
             uid=random.randint(100000,900000)
-            flag=User.query.filter_by(UserID=tid).first()
+            flag=User.query.filter_by(UserID=uid).first()
             
         
         
