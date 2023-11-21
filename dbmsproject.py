@@ -271,7 +271,7 @@ def checkuser():
     ser_det= {'UserID':useracc.UserID,'Name':useracc.Username,'Age':useracc.Age,'Phone':useracc.Phone}
     accdetails=Account.query.filter_by(UID=data['UserID']).all()
     ser_acc = [serialize_account(account) for account in accdetails]
-    return jsonify({'Userdetails':ser_det},{'Accounts':ser_acc}),201
+    return jsonify({'Userdetails':ser_det}),201
 
 
 #Create User Route 
