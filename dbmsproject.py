@@ -272,14 +272,36 @@ def checkuser():
     accdetails=Account.query.filter_by(UID=data['UserID']).all()
     ser_acc = [serialize_account(account) for account in accdetails]
     return jsonify({'Userdetails':ser_det},{'Accounts':ser_acc}),201
-        
-    
-    
-          
-        
 
-    
 
+#Create User Route 
+@app.route('/api/createuser',methods=['POST'])
+def createuser():
+        data = request.get_json()
+        
+        uid=random.randint(100000,900000)
+        
+        flag=User.query.filter_by(UserID=tid).first()
+        
+        while(flag):
+            uid=random.randint(100000,900000)
+            flag=User.query.filter_by(UserID=tid).first()
+            
+        
+        
+        newuser=User(
+                                UserID=uid,
+                                Username=data['Username'],
+                                Password=data['Password'],
+                                Age=data['Age'],
+                                Phone=data['Phone']
+                         )
+        
+        db.session.add(newuser)
+        db.session.commit()
+
+        return jsonify({'message':'User Created Successfully'}),200
+        
 
 
 
