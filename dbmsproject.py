@@ -262,14 +262,14 @@ def adminpayment():
 #Check User Details Route
 @app.route('/api/checkuser',methods=['GET'])
 def checkuser():  
-    data = request.get_json()
-    useracc= User.query.filter_by(UserID=data['UserID']).first()
+    data=request.args.get('UserID')
+    useracc= User.query.filter_by(UserID=data).first()
     
     if not useracc:
         return jsonify({'message':'User Not Found'}),404
     
     ser_det= {'UserID':useracc.UserID,'Name':useracc.Username,'Age':useracc.Age,'Phone':useracc.Phone}
-    accdetails=Account.query.filter_by(UID=data['UserID']).all()
+    accdetails=Account.query.filter_by(UID=data).all()
     ser_acc = [serialize_account(account) for account in accdetails]
     return jsonify({'Userdetails':ser_det}),201
 
@@ -301,6 +301,10 @@ def createuser():
         db.session.commit()
 
         return jsonify({'message':'User Created Successfully'}),200
+    
+    
+#Delete User Route
+@app.route('/api/createuser',methods=['POST'])
         
 
 
@@ -332,14 +336,7 @@ def sortfunc(x):
 
     
     
-    
-    
-    
-    
-    
-    
-    
-    
+
 
 @app.route('/')
 def index():
