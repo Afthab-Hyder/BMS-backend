@@ -4,6 +4,7 @@ from flask_cors import CORS
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
 from sqlalchemy import and_, or_, not_
+import random
 import os
 
 app = Flask(__name__)
@@ -52,7 +53,7 @@ class Account(db.Model):
 class Transaction(db.Model):
     __tablename__='transactions'
     
-    now=datetime.now().replace(second=0,microsecond=0)
+    
     
     TransactionID=db.Column(db.Integer,primary_key=True)
     FromAccount=db.Column(db.Integer,db.ForeignKey('accounts.AccountNo'),unique=False,nullable=False)
@@ -100,16 +101,27 @@ from flask import request, jsonify
 def userlogin():
     data = request.get_json()
     user = User.query.filter_by(UserID=data['UserID']).first()
+    accdetails=Account.query.filter_by(UID=data['UserID']).all()
+    ser_acc = [makearray_account(account) for account in accdetails]
     if user and user.Password == data['Password']:
-        return jsonify({'message': 'Login successful', 'UserID': user.UserID})
-    return jsonify({'message': 'Invalid username or password'}),401
+        return jsonify({'AccountNo':ser_acc})
+    return jsonify({'Accountno':[]}),401
 
-#try
+# #User Account list Route
+# @app.route('/api/useraccounts', methods=['GET'])
+# def useraccounts():
+#     data = request.args.get('UserID')
+#     accdetails=Account.query.filter_by(UID=data).all()
+#     ser_acc = [makearray_account(account) for account in accdetails]
+#     if ser_acc:
+#         return jsonify({'Accounts':ser_acc}),201
+#     return jsonify({'Accounts':[]}),201    
+
 # Admin Login route
 @app.route('/api/adminlogin', methods=['POST'])
 def adminlogin():
     data = request.get_json()
-    admin = User.query.filter_by(AdminID=data['AdminID'])
+    admin = Admin.query.filter_by(AdminID=data['AdminID']).first()
     if admin and admin.Password == data['Password']:
         return jsonify({'message': 'Login successful', 'AdminID': admin.AdminID})
     return jsonify({'message': 'Invalid username or password'}), 401
@@ -125,16 +137,31 @@ def userdetails():
     ser_acc = [serialize_account(account) for account in accdetails]
     return jsonify({'Userdetails':ser_det},{'Accounts':ser_acc}),201
 
+
+
+#Admin Details Route
+@app.route('/api/admindetails', methods=['GET'])
+def admindetails():
+    data = request.args.get('AdminID')
+    admindetails = Admin.query.filter_by(AdminID=data).first()
+    ser_det= {'AdminID':admindetails.AdminID,'Name':admindetails.Name}
+    return jsonify({'Admindetails':ser_det}),201
+
+
 #Logout
 @app.route('/api/logout',methods=['GET'])
 def logout():
     return jsonify({'message':'logged out'}),200
 
 
+
+
 #Transaction History Route
 @app.route('/api/transactions',methods=['GET'])
 def transactions():
     data=request.args.get('AccountNo')
+    if data is None or data =='...':
+        return jsonify({'Transactions':[{'Amount':'...'}]}),201
     from_trans=Transaction.query.filter_by(FromAccount=data).all()
     to_trans=Transaction.query.filter_by(ToAccount=data).all()
     ser_trans_from=[serialize_transaction(transaction) for transaction in from_trans]
@@ -144,7 +171,189 @@ def transactions():
     ser_trans_from.sort(key=sortfunc)
     if(from_trans or to_trans):
         return jsonify({'Transactions':ser_trans_from})
-    return jsonify({'message':'Cant find entries'}),404
+    return jsonify({[]}),
+
+
+
+
+#User Transaction Payment Route
+@app.route('/api/userpayment',methods=['POST'])
+def userpayment():
+        data = request.get_json()
+        fromacc=Account.query.filter_by(AccountNo=data['FromAccount']).first()
+        toacc=Account.query.filter_by(AccountNo=data['Toaccount']).first()
+        
+        if fromacc==None or toacc==None:
+            return jsonify({'message':'Invalid Account Number'}),404
+        
+        amount=data['Amount']
+        balance=fromacc.Balance
+    
+        if amount>balance:
+            return jsonify({'message':'Insufficient Balance'}),404
+        
+        tid=random.randint(100000,900000)
+        
+        flag=Account.query.filter_by(AccountNo=tid).first()
+        
+        while(flag):
+            tid=random.randint(100000,900000)
+            flag=Account.query.filter_by(AccountNo=tid).first()
+            
+        
+        now=str(datetime.now().replace(second=0,microsecond=0))
+        print(now)
+        trans=Transaction(
+                                TransactionID=tid,
+                                FromAccount=data['FromAccount'],
+                                Toaccount=data['ToAccount'],
+                                AdminID=0,
+                                Type=data['Type'],
+                                Amount=data['Amount'],
+                                Date=now
+                         )
+        
+        db.session.add(trans)
+        db.session.commit()
+        
+        fromacc.Balance=fromacc.Balance-amount
+        db.session.commit()
+        toacc.Balance=toacc.Balance+amount
+        db.session.commit()
+        
+        return jsonify({'message':'Transaction Complete'}),200
+
+
+#Admin Transaction Payment Route
+@app.route('/api/adminpayment',methods=['POST'])
+def adminpayment():
+        data = request.get_json()
+        fromacc=Account.query.filter_by(AccountNo=data['FromAccount']).first()
+        toacc=Account.query.filter_by(AccountNo=data['Toaccount']).first()
+        
+        if fromacc==None or toacc==None:
+            return jsonify({'message':'Invalid Account Number'}),404
+        
+        amount=data['Amount']
+        admin=data['AdminID']
+        balance=fromacc.Balance
+        
+    
+        if amount>balance:
+            return jsonify({'message':'Insufficient Balance'}),404
+        
+        tid=random.randint(100000,900000)
+        
+        flag=Account.query.filter_by(AccountNo=tid).first()
+        
+        while(flag):
+            tid=random.randint(100000,900000)
+            flag=Account.query.filter_by(AccountNo=tid).first()
+            
+        
+        now=str(datetime.now().replace(second=0,microsecond=0))
+        print(now)
+        trans=Transaction(
+                                TransactionID=tid,
+                                FromAccount=data['FromAccount'],
+                                Toaccount=data['ToAccount'],
+                                AdminID=admin,
+                                Type=data['Type'],
+                                Amount=data['Amount'],
+                                Date=now
+                         )
+        
+        db.session.add(trans)
+        db.session.commit()
+        
+        fromacc.Balance=fromacc.Balance-amount
+        db.session.commit()
+        toacc.Balance=toacc.Balance+amount
+        db.session.commit()
+        
+        return jsonify({'message':'Transaction Complete'}),200
+
+
+#Check User Details Route
+@app.route('/api/checkuser',methods=['GET'])
+def checkuser():  
+    data=request.args.get('UserID')
+    useracc= User.query.filter_by(UserID=data).first()
+    
+    if not useracc:
+        return jsonify({'message':'User Not Found'}),404
+    
+    ser_det= {'UserID':useracc.UserID,'Name':useracc.Username,'Age':useracc.Age,'Phone':useracc.Phone}
+    accdetails=Account.query.filter_by(UID=data).all()
+    ser_acc = [serialize_account(account) for account in accdetails]
+    return jsonify({'Userdetails':ser_det}),201
+
+
+#Create User Route 
+@app.route('/api/createuser',methods=['POST'])
+def createuser():
+        data = request.get_json()
+        
+        uid=random.randint(100000,900000)
+        
+        flag=User.query.filter_by(UserID=uid).first()
+        
+        while(flag):
+            uid=random.randint(100000,900000)
+            flag=User.query.filter_by(UserID=uid).first()
+            
+        
+        
+        newuser=User(
+                                UserID=uid,
+                                Username=data['Username'],
+                                Password=data['Password'],
+                                Age=data['Age'],
+                                Phone=data['Phone']
+                         )
+        
+        db.session.add(newuser)
+        db.session.commit()
+
+        return jsonify({'message':'User Created Successfully'}),200
+    
+    
+#Delete User Route
+@app.route('/api/deleteuser',methods=['POST'])
+def deleteuser():
+        data = request.get_json()
+        
+        uid=User.query.filter_by(UserID=data['UserID']).first()
+        
+        if not uid:
+            return jsonify({'message':'User Not Found'}),401
+        
+        loans=Loan.query.filter_by(User=data['UserID']).all()
+        
+        if loans:
+            return jsonify({'message':'User has unclosed Loans.Failed to delete user'}),401
+
+        accdetails=Account.query.filter_by(UID=data['UserID']).all()
+        for account in accdetails:
+            db.session.delete(account)
+            db.session.commit()
+            
+        db.session.delete(uid)
+        db.session.commit()
+        
+        return jsonify({'message':'User and their accounts deleted successfully'}),200
+            
+            
+
+        
+        
+        
+        
+        
+
+    
+    
+        
 
 
 
@@ -154,7 +363,9 @@ def serialize_account(account):
                 'Type':account.Type,
                 'Balance':account.Balance       
             }
-    
+
+def makearray_account(account):
+    return account.AccountNo
     
 def serialize_transaction(trans):
     return {
@@ -175,14 +386,7 @@ def sortfunc(x):
 
     
     
-    
-    
-    
-    
-    
-    
-    
-    
+
 
 @app.route('/')
 def index():
@@ -205,4 +409,4 @@ def initialize_database():
 if __name__=="__main__":
     initialize_database()
     app.run()
-
+    
