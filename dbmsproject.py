@@ -70,7 +70,7 @@ class Transaction(db.Model):
 class LoanRequest(db.Model):
     __tablename__='loanrequest'
     
-    User=db.Column(db.Integer,db.ForeignKey('users.UserID'),primary_key=True)
+    UserID=db.Column(db.Integer,db.ForeignKey('users.UserID'),primary_key=True)
     Amount=db.Column(db.Integer,unique=False,nullable=False)
     Duration=db.Column(db.Integer,unique=False,nullable=False)
     Admin=db.Column(db.Integer,db.ForeignKey('admins.AdminID'),unique=False,nullable=False)
@@ -84,9 +84,10 @@ class Loan(db.Model):
     
     LoanID=db.Column(db.Integer,primary_key=True)
     AmountRemaining=db.Column(db.Integer,unique=False,nullable=False)
+    TotalAmount=db.Column(db.Integer,unique=False,nullable=False)
     FixedAmount=db.Column(db.Integer,unique=False,nullable=False)
     PaymentsRemaining=db.Column(db.Integer,unique=False,nullable=False)
-    User=db.Column(db.Integer,db.ForeignKey('users.UserID'),nullable=False,unique=False)
+    UserID=db.Column(db.Integer,db.ForeignKey('users.UserID'),nullable=False,unique=False)
     StartDate=db.Column(db.DateTime,default=datetime.utcnow)
     
     def __repr__(self):
@@ -172,6 +173,25 @@ def transactions():
     if(from_trans or to_trans):
         return jsonify({'Transactions':ser_trans_from})
     return jsonify({[]}),
+
+
+
+#Loan History Route
+@app.route('/api/loanhistory',methods=['GET'])
+def loanhistory():
+    data=request.args.get('AccountNo')
+    if data is None or data =='...':
+        return jsonify({'Loans':[{'TotalAmount':'...'}]}),201
+    loans=Loan.query.filter_by(UserID=data).all()
+    
+    ser_loans=[serialize_loan(loan) for loan in loans]
+    
+    if(loans):
+        return jsonify({'Loans':ser_loans})
+    return jsonify({[]}),
+
+
+
 
 
 
@@ -374,7 +394,18 @@ def serialize_transaction(trans):
                 'ToAccount':trans.ToAccount,
                 'Type':trans.Type,
                 'Amount':trans.Amount,
-                'Date':trans.Date,
+                'Date':trans.Date
+    }
+    
+def serialize_loan(loan):
+    return {
+                'LoanID':loan.LoanID,
+                'AmountRemaining':loan.AmountRemaining,
+                'TotalAmount':loan.TotalAmount,
+                'FixedAmount':loan.FixedAmount,
+                'PaymentsRemaining':loan.PaymentsRemaining,
+                'UserID':loan.UserID,
+                'StartDate':loan.Date
     }
     
 def sortfunc(x):
