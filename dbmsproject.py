@@ -10,7 +10,7 @@ import os
 app = Flask(__name__)
 CORS(app)
 #app.config['SECRET_KEY'] = '5791628bb0b13ce0c676dfde280ba245'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:password@localhost:5432/projectdb'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:pass@localhost:5432/projectdb'
 db = SQLAlchemy(app)
 
 
@@ -101,16 +101,27 @@ from flask import request, jsonify
 def userlogin():
     data = request.get_json()
     user = User.query.filter_by(UserID=data['UserID']).first()
+    accdetails=Account.query.filter_by(UID=data['UserID']).all()
+    ser_acc = [makearray_account(account) for account in accdetails]
     if user and user.Password == data['Password']:
-        return jsonify({'message': 'Login successful', 'UserID': user.UserID})
-    return jsonify({'message': 'Invalid username or password'}),401
+        return jsonify({'AccountNo':ser_acc})
+    return jsonify({'Accountno':[]}),401
 
+# #User Account list Route
+# @app.route('/api/useraccounts', methods=['GET'])
+# def useraccounts():
+#     data = request.args.get('UserID')
+#     accdetails=Account.query.filter_by(UID=data).all()
+#     ser_acc = [makearray_account(account) for account in accdetails]
+#     if ser_acc:
+#         return jsonify({'Accounts':ser_acc}),201
+#     return jsonify({'Accounts':[]}),201    
 
 # Admin Login route
 @app.route('/api/adminlogin', methods=['POST'])
 def adminlogin():
     data = request.get_json()
-    admin = User.query.filter_by(AdminID=data['AdminID']).first()
+    admin = Admin.query.filter_by(AdminID=data['AdminID']).first()
     if admin and admin.Password == data['Password']:
         return jsonify({'message': 'Login successful', 'AdminID': admin.AdminID})
     return jsonify({'message': 'Invalid username or password'}), 401
@@ -143,10 +154,14 @@ def logout():
     return jsonify({'message':'logged out'}),200
 
 
+
+
 #Transaction History Route
 @app.route('/api/transactions',methods=['GET'])
 def transactions():
     data=request.args.get('AccountNo')
+    if data is None or data =='...':
+        return jsonify({'Transactions':[{'Amount':'...'}]}),201
     from_trans=Transaction.query.filter_by(FromAccount=data).all()
     to_trans=Transaction.query.filter_by(ToAccount=data).all()
     ser_trans_from=[serialize_transaction(transaction) for transaction in from_trans]
@@ -156,7 +171,7 @@ def transactions():
     ser_trans_from.sort(key=sortfunc)
     if(from_trans or to_trans):
         return jsonify({'Transactions':ser_trans_from})
-    return jsonify({'message':'Cant find entries'}),404
+    return jsonify({[]}),
 
 
 
@@ -166,7 +181,7 @@ def transactions():
 def userpayment():
         data = request.get_json()
         fromacc=Account.query.filter_by(AccountNo=data['FromAccount']).first()
-        toacc=Account.query.filter_by(AccountNo=data['Toaccount']).first()
+        toacc=Account.query.filter_by(AccountNo=data['ToAccount']).first()
         
         if fromacc==None or toacc==None:
             return jsonify({'message':'Invalid Account Number'}),404
@@ -174,7 +189,7 @@ def userpayment():
         amount=data['Amount']
         balance=fromacc.Balance
     
-        if amount>balance:
+        if int(amount)>balance:
             return jsonify({'message':'Insufficient Balance'}),404
         
         tid=random.randint(100000,900000)
@@ -191,9 +206,9 @@ def userpayment():
         trans=Transaction(
                                 TransactionID=tid,
                                 FromAccount=data['FromAccount'],
-                                Toaccount=data['ToAccount'],
-                                AdminID=0,
-                                Type=data['Type'],
+                                ToAccount=data['ToAccount'],
+                                AdminID=1,
+                                Type='Saving',
                                 Amount=data['Amount'],
                                 Date=now
                          )
@@ -201,9 +216,9 @@ def userpayment():
         db.session.add(trans)
         db.session.commit()
         
-        fromacc.Balance=fromacc.Balance-amount
+        fromacc.Balance=fromacc.Balance-int(amount)
         db.session.commit()
-        toacc.Balance=toacc.Balance+amount
+        toacc.Balance=toacc.Balance+int(amount)
         db.session.commit()
         
         return jsonify({'message':'Transaction Complete'}),200
@@ -348,7 +363,9 @@ def serialize_account(account):
                 'Type':account.Type,
                 'Balance':account.Balance       
             }
-    
+
+def makearray_account(account):
+    return account.AccountNo
     
 def serialize_transaction(trans):
     return {
