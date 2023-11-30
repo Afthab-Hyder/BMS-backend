@@ -181,7 +181,7 @@ def transactions():
 def userpayment():
         data = request.get_json()
         fromacc=Account.query.filter_by(AccountNo=data['FromAccount']).first()
-        toacc=Account.query.filter_by(AccountNo=data['Toaccount']).first()
+        toacc=Account.query.filter_by(AccountNo=data['ToAccount']).first()
         
         if fromacc==None or toacc==None:
             return jsonify({'message':'Invalid Account Number'}),404
@@ -189,7 +189,7 @@ def userpayment():
         amount=data['Amount']
         balance=fromacc.Balance
     
-        if amount>balance:
+        if int(amount)>balance:
             return jsonify({'message':'Insufficient Balance'}),404
         
         tid=random.randint(100000,900000)
@@ -206,9 +206,9 @@ def userpayment():
         trans=Transaction(
                                 TransactionID=tid,
                                 FromAccount=data['FromAccount'],
-                                Toaccount=data['ToAccount'],
-                                AdminID=0,
-                                Type=data['Type'],
+                                ToAccount=data['ToAccount'],
+                                AdminID=1,
+                                Type='Saving',
                                 Amount=data['Amount'],
                                 Date=now
                          )
@@ -216,9 +216,9 @@ def userpayment():
         db.session.add(trans)
         db.session.commit()
         
-        fromacc.Balance=fromacc.Balance-amount
+        fromacc.Balance=fromacc.Balance-int(amount)
         db.session.commit()
-        toacc.Balance=toacc.Balance+amount
+        toacc.Balance=toacc.Balance+int(amount)
         db.session.commit()
         
         return jsonify({'message':'Transaction Complete'}),200
