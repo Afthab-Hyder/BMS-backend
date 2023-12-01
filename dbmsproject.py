@@ -339,32 +339,7 @@ def createuser():
 
         return jsonify({'message':'User Created Successfully'}),200
     
-    
-#Delete User Route
-@app.route('/api/deleteuser',methods=['POST'])
-def deleteuser():
-        data = request.get_json()
-        
-        uid=User.query.filter_by(UserID=data['UserID']).first()
-        
-        if not uid:
-            return jsonify({'message':'User Not Found'}),401
-        
-        loans=Loan.query.filter_by(UserID=data['UserID']).all()
-        
-        if loans:
-            return jsonify({'message':'User has unclosed Loans.Failed to delete user'}),401
-
-        accdetails=Account.query.filter_by(UID=data['UserID']).all()
-        for account in accdetails:
-            db.session.delete(account)
-            db.session.commit()
-            
-        db.session.delete(uid)
-        db.session.commit()
-        
-        return jsonify({'message':'User and their accounts deleted successfully'}),200
-    
+ 
     
 #Delete User Route
 @app.route('/api/deleteuser',methods=['POST'])
