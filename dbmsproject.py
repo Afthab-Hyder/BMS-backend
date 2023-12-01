@@ -394,10 +394,10 @@ def withdraw():
     if not acc:
         return jsonify({'message':'Invalid Account Number'}),401
     
-    if data['Amount']>acc.Balance:
+    if int(data['Amount'])>acc.Balance:
         return jsonify({'message':'Insufficient Balance'}),401
     
-    acc.Balance=acc.Balance-data['Amount']
+    acc.Balance=acc.Balance-int(data['Amount'])
     db.session.commit()
     
     return jsonify({'message':'Withdrawal Successful'}),201
@@ -413,7 +413,7 @@ def deposit():
     if not acc:
         return jsonify({'message':'Invalid Account Number'}),401
     
-    acc.Balance=acc.Balance+data['Amount']
+    acc.Balance=acc.Balance+int(data['Amount'])
     db.session.commit()
     
     return jsonify({'message':'Deposit Successful'}),201
