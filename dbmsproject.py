@@ -364,6 +364,67 @@ def deleteuser():
         db.session.commit()
         
         return jsonify({'message':'User and their accounts deleted successfully'}),200
+    
+    
+#Delete User Route
+@app.route('/api/deleteuser',methods=['POST'])
+def deleteuser():
+        data = request.get_json()
+        
+        uid=User.query.filter_by(UserID=data['UserID']).first()
+        
+        if not uid:
+            return jsonify({'message':'User Not Found'}),401
+        
+        loans=Loan.query.filter_by(User=data['UserID']).all()
+        
+        if loans:
+            return jsonify({'message':'User has unclosed Loans.Failed to delete user'}),401
+
+        accdetails=Account.query.filter_by(UID=data['UserID']).all()
+        for account in accdetails:
+            db.session.delete(account)
+            db.session.commit()
+            
+        db.session.delete(uid)
+        db.session.commit()
+        
+        return jsonify({'message':'User and their accounts deleted successfully'}),200
+    
+    
+#Withdraw Route
+@app.route('/api/withdraw',methods=['POST'])
+def withdraw():
+    data = request.get_json()
+    
+    acc=Account.query.filter_by(AccountNo=data['AccountNo']).first()
+    
+    if not acc:
+        return jsonify({'message':'Invalid Account Number'}),401
+    
+    if data['Amount']>acc.Balance:
+        return jsonify({'message':'Insufficient Balance'}),401
+    
+    acc.Balance=acc.Balance-data['Amount']
+    db.session.commit()
+    
+    return jsonify({'message':'Withdrawal Successful'}),201
+
+
+#Deposit Route
+@app.route('/api/deposit',methods=['POST'])
+def deposit():
+    data = request.get_json()
+    
+    acc=Account.query.filter_by(AccountNo=data['AccountNo']).first()
+    
+    if not acc:
+        return jsonify({'message':'Invalid Account Number'}),401
+    
+    acc.Balance=acc.Balance+data['Amount']
+    db.session.commit()
+    
+    return jsonify({'message':'Deposit Successful'}),201
             
             
 
