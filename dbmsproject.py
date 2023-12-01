@@ -104,8 +104,10 @@ def userlogin():
     user = User.query.filter_by(UserID=data['UserID']).first()
     accdetails=Account.query.filter_by(UID=data['UserID']).all()
     ser_acc = [makearray_account(account) for account in accdetails]
+    loanaccdetails=Account.query.filter(and_(Account.UID==data['UserID'],Account.Type=='Loan')).all()
+    ser_loan=[makearray_loan(loanaccount) for loanaccount in loanaccdetails]
     if user and user.Password == data['Password']:
-        return jsonify({'AccountNo':ser_acc})
+        return jsonify({'AccountNo':ser_acc ,'LoanAccountNo':ser_loan})
     return jsonify({'Accountno':[]}),401
 
 # #User Account list Route
@@ -179,15 +181,15 @@ def transactions():
 #Loan History Route
 @app.route('/api/loanhistory',methods=['GET'])
 def loanhistory():
-    data=request.args.get('AccountNo')
+    data=request.args.get('LoanID')
     if data is None or data =='...':
         return jsonify({'Loans':[{'TotalAmount':'...'}]}),201
-    loans=Loan.query.filter_by(UserID=data).all()
+    loans=Loan.query.filter_by(LoanID=data).all()
     
     ser_loans=[serialize_loan(loan) for loan in loans]
     
     if(loans):
-        return jsonify({'Loans':ser_loans})
+        return jsonify({'Loans':ser_loans}),201
     return jsonify({[]}),
 
 
@@ -348,7 +350,7 @@ def deleteuser():
         if not uid:
             return jsonify({'message':'User Not Found'}),401
         
-        loans=Loan.query.filter_by(User=data['UserID']).all()
+        loans=Loan.query.filter_by(UserID=data['UserID']).all()
         
         if loans:
             return jsonify({'message':'User has unclosed Loans.Failed to delete user'}),401
@@ -386,6 +388,9 @@ def serialize_account(account):
 
 def makearray_account(account):
     return account.AccountNo
+
+def makearray_loan(account):
+    return account.AccountNo    
     
 def serialize_transaction(trans):
     return {
@@ -405,7 +410,7 @@ def serialize_loan(loan):
                 'FixedAmount':loan.FixedAmount,
                 'PaymentsRemaining':loan.PaymentsRemaining,
                 'UserID':loan.UserID,
-                'StartDate':loan.Date
+                'StartDate':loan.StartDate
     }
     
 def sortfunc(x):
