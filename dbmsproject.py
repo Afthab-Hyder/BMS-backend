@@ -418,6 +418,27 @@ def deposit():
     
     return jsonify({'message':'Deposit Successful'}),201
 
+
+#Loan Apply Route
+@app.route('/api/loanpply',methods=['POST'])
+def loanapply():
+    data = request.get_json()
+    
+    req = LoanRequest(
+                            UserID=data['UserID'],
+                            Amount=data['Amount'],
+                            Duration=data['Duration'],
+                            FixedAmount=data['FixedAmount'],
+                            Admin=0             
+                    )
+    
+    db.session.add(req)
+    db.session.commit()
+    
+    return jsonify({'message':'Loan Application Submitted'}),201
+    
+    
+
             
 
         
