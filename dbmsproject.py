@@ -317,18 +317,22 @@ def checkuser():
 def createuser():
         data = request.get_json()
         
-        uid=random.randint(100000,900000)
+        #uid=random.randint(100000,900000)
         
-        flag=User.query.filter_by(UserID=uid).first()
+        uflag=User.query.filter_by(UserID=data['UserID']).first()
+        aflag=Account.query.filter_by(AccountNo=data['AccountNo']).first()
         
-        while(flag):
-            uid=random.randint(100000,900000)
-            flag=User.query.filter_by(UserID=uid).first()
+        if uflag:
+            return jsonify({'message':'UserID Already Exists'}),401
+        if aflag:
+            return jsonify({'message':'Account Number Already Exists'}),401
+
+            
             
         
         
         newuser=User(
-                                UserID=uid,
+                                UserID=data['UserID'],
                                 Username=data['Username'],
                                 Password=data['Password'],
                                 Age=data['Age'],
@@ -337,6 +341,18 @@ def createuser():
         
         db.session.add(newuser)
         db.session.commit()
+        
+        newacc=Account(
+                                AccountNo=data['AccountNo'],
+                                Type=data['Type'],
+                                Balance=0,
+                                UID=data['UserID']
+        )
+        
+        db.session.add(newacc)
+        db.session.commit()
+        
+
 
         return jsonify({'message':'User Created Successfully'}),200
     
