@@ -73,6 +73,7 @@ class LoanRequest(db.Model):
     UserID=db.Column(db.Integer,db.ForeignKey('users.UserID'),primary_key=True)
     Amount=db.Column(db.Integer,unique=False,nullable=False)
     Duration=db.Column(db.Integer,unique=False,nullable=False)
+    FixedAmount=db.Column(db.Integer,unique=False,nullable=False)
     Admin=db.Column(db.Integer,db.ForeignKey('admins.AdminID'),unique=False,nullable=False)
     
     def __repr__(self):
@@ -400,7 +401,7 @@ def deposit():
     db.session.commit()
     
     return jsonify({'message':'Deposit Successful'}),201
-            
+
             
 
         
