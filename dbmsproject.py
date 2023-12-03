@@ -467,7 +467,7 @@ def loanapprove():
         if data['Reply']=='No':
             loanreq=LoanRequest.query.filter_by(UserID=data['UserID']).first()
             db.session.delete(loanreq)
-            db.session.commit
+            db.session.commit()
             return jsonify({'message':'Loan Request Rejected'}),401
         
         if data['Reply']=='Yes':
