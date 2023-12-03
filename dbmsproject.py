@@ -1,3 +1,16 @@
+
+
+None selected
+
+Skip to content
+Using National Institute of Technology Calicut Mail with screen readers
+
+Conversations
+Using 1.1 GB
+Program Policies
+Powered by Google
+Last account activity: 9 minutes ago
+Details
 from flask import Flask, request
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
@@ -571,7 +584,7 @@ def userpayloan():
         if loan.Status=='Closed':
             return jsonify({'message':'Loan Payment Successful.Loan Closed'}),201
         
-        return jsonify({'message':'Loan Payent Successful'}),201
+        return jsonify({'message':'Loan Payment Successful'}),201
         
         
         
