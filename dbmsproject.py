@@ -525,9 +525,10 @@ def userpayloan():
             return jsonify({'message':'User Has No Active Loans'}),401
         print(lid)
         found=0
-        
+        print("hi")
         for items in flags:
-            if items.LoanID==lid:
+            print(items.LoanID)
+            if items.LoanID==int(lid):
                 found=1
                 loan=items
                 break
