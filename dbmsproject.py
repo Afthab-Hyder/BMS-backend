@@ -527,7 +527,7 @@ def userpayloan():
         found=0
         
         for items in flags:
-            if items.LoanID==lid:
+            if items.LoanID==int(lid):
                 found=1
                 loan=items
                 break
@@ -573,6 +573,28 @@ def userpayloan():
             return jsonify({'message':'Loan Payment Successful.Loan Closed'}),201
         
         return jsonify({'message':'Loan Payment Successful'}),201
+    
+    
+#Create Admin Route
+@app.route('/api/createadmin',methods=['POST'])
+def createadmin(): 
+    data = request.get_json()
+    
+    if data['MasterKey']!='1029384756':
+        return jsonify({'message':'Inavlid Master Key'}),401
+    
+    newadmin=Admin(
+                        Name=data['Name'],
+                        AdminID=data['AdminID'],
+                        Password=data['Password']
+                  )
+    
+    db.session.add(newadmin)
+    db.session.commit()
+    
+    return jsonify({'message':'New Admin Created Successfully'}),201
+    
+    
         
         
         
