@@ -75,6 +75,7 @@ class LoanRequest(db.Model):
     Duration=db.Column(db.Integer,unique=False,nullable=False)
     FixedAmount=db.Column(db.Integer,unique=False,nullable=False)
     Admin=db.Column(db.Integer,db.ForeignKey('admins.AdminID'),unique=False,nullable=False)
+    Account=db.Column(db.Integer,unique=False,nullable=False)
     
     def __repr__(self):
         return f"LoanRequest('{self.User}')"
@@ -420,22 +421,87 @@ def deposit():
 
 
 #Loan Apply Route
-@app.route('/api/loanpply',methods=['POST'])
+@app.route('/api/loanapply',methods=['POST'])
 def loanapply():
     data = request.get_json()
+    
+    uid=LoanRequest.query.filter_by(UserID=data['UserID'])
+    
+    if uid:
+        return jsonify({'message':'User has a pending loan request'}),401
+    
+    acc=Account.query.filter_by(AccountNo=data['Account']).first()
+    
+    if acc.UID!=data['UserID']:
+        return jsonify({'message':'Account Number not of Current User'}),401
     
     req = LoanRequest(
                             UserID=data['UserID'],
                             Amount=data['Amount'],
                             Duration=data['Duration'],
                             FixedAmount=data['FixedAmount'],
-                            Admin=0             
+                            Admin=0,
+                            Account=data['Account']       
                     )
     
     db.session.add(req)
     db.session.commit()
     
     return jsonify({'message':'Loan Application Submitted'}),201
+
+
+#Loan Approve Route
+@app.route('/api/loanapprove',methods=['POST','GET'])
+def loanapprove():
+    
+    if request.method=='GET':
+        requests=LoanRequest.query.all()
+        ser_reqs=[serialize_request(req) for req in requests]
+        return jsonify({'requests':ser_reqs}),201
+    
+    if request.method=='POST':
+        data = request.get_json()
+        
+        if data['Reply']=='No':
+            return jsonify({'message':'Loan Request Rejected'}),401
+        
+        if data['Reply']=='Yes':
+            
+            loanid=random.randint(100000,900000)
+            
+            flag=Loan.query.filter_by(LoanID=loanid).first()
+            
+            while flag:
+                 loanid=random.randint(100000,900000)
+                 flag=Loan.query.filter_by(LoanID=loanid).first()
+                 
+            now=str(datetime.now().replace(second=0,microsecond=0))
+            
+            newloan=Loan(
+                            LoanID=loanid,
+                            AmountRemaining=data['AmountRemaining'],
+                            TotalAmount=data['TotalAmount'],
+                            FixedAmount=data['FixedAmount'],
+                            PaymentsRemaining=data['PaymentsRemaining'],
+                            UserID=data['UserID'],
+                            StartDate=now
+                        )
+            
+            db.session.add(newloan)
+            db.session.commit
+            
+            loanreq=LoanRequest.query.filter_by(UserID=data['UserID']).first()
+            db.session.delete(loanreq)
+            db.session.commit
+            
+            return jsonify({'message':'Loan Approved Successfully'})
+        
+        
+        
+        
+    
+    
+
     
     
 
@@ -485,6 +551,16 @@ def serialize_loan(loan):
                 'PaymentsRemaining':loan.PaymentsRemaining,
                 'UserID':loan.UserID,
                 'StartDate':loan.StartDate
+    }
+    
+def serialize_request(req):
+    return {
+                'UserID':req.UserID,
+                'Amount':req.Amount,
+                'Duration':req.Duration,
+                'FixedAmount':req.FixedAmount,
+                'Admin':req.Admin,
+                'Account':req.Account
     }
     
 def sortfunc(x):
