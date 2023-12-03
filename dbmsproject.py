@@ -469,7 +469,7 @@ def loanapprove():
             loanreq=LoanRequest.query.filter_by(UserID=data['UserID']).first()
             db.session.delete(loanreq)
             db.session.commit()
-            return jsonify({'message':'Loan Request Rejected'}),401
+            return jsonify({'message':'Loan Request Rejected'}),201
         
         if data['Reply']=='Yes':
             
@@ -553,7 +553,7 @@ def userpayloan():
         
         
         if acc.Balance<data['FixedAmount']:
-            return jsonify({'message':'Account has Insufficient Balance'})
+            return jsonify({'message':'Account has Insufficient Balance'}),401
         
         loan=Loan.query.filter_by(LoanID=data['LoanID']).first()
         
