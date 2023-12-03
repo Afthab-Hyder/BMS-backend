@@ -526,7 +526,7 @@ def userpayloan():
         found=0
         
         for items in flags:
-            if int(items.LoanID)==lid:
+            if items.LoanID==lid:
                 found=1
                 loan=items
                 break
@@ -536,7 +536,7 @@ def userpayloan():
         
         if loan:
         
-            ser_loan={'LoanID':int(loan.LoanID),'TotalAmount':int(loan.TotalAmount),'FixedAmount':int(loan.FixedAmount),'PaymentsRemaining':int(loan.PaymentsRemaining),'Status':loan.Status}
+            ser_loan={'LoanID':loan.LoanID,'TotalAmount':loan.TotalAmount,'FixedAmount':loan.FixedAmount,'PaymentsRemaining':loan.PaymentsRemaining,'Status':loan.Status}
             if loan.Status=='Closed':
                 return jsonify({'Loan':ser_loan,'message':'Loan Already Closed'}),401
             
