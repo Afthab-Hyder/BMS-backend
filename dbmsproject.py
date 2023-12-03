@@ -525,8 +525,9 @@ def userpayloan():
             return jsonify({'message':'User Has No Active Loans'}),401
         print(lid)
         found=0
-        
+        print("hi")
         for items in flags:
+            print(items.LoanID)
             if items.LoanID==int(lid):
                 found=1
                 loan=items
@@ -549,19 +550,19 @@ def userpayloan():
         
         acc=Account.query.filter_by(AccountNo=data['AccountNo']).first()
         
-        if acc.UID!=data['UserID']:
+        if acc.UID!=int(data['UserID']):
             return jsonify({'message':'Account does not belong to current User'}),401
         
         
-        if acc.Balance<data['FixedAmount']:
+        if acc.Balance<int(data['FixedAmount']):
             return jsonify({'message':'Account has Insufficient Balance'}),401
         
         loan=Loan.query.filter_by(LoanID=data['LoanID']).first()
         
-        acc.Balance=acc.Balance-data['FixedAmount']
+        acc.Balance=acc.Balance-int(data['FixedAmount'])
         db.session.commit()
         
-        loan.AmountRemaining=loan.AmountRemaining-data['FixedAmount']
+        loan.AmountRemaining=loan.AmountRemaining-int(data['FixedAmount'])
         db.session.commit()
         loan.PaymentsRemaining=loan.PaymentsRemaining-1
         db.session.commit()
@@ -614,30 +615,6 @@ def closeaccount():
     
         
         
-        
-        
-        
-        
-         
-    
-    
-
-    
-    
-
-            
-
-        
-        
-        
-        
-        
-
-    
-    
-        
-
-
 
 def serialize_account(account):
     return {
