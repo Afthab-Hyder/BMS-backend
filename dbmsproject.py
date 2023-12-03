@@ -525,9 +525,8 @@ def userpayloan():
             return jsonify({'message':'User Has No Active Loans'}),401
         print(lid)
         found=0
-        print("hi")
+        
         for items in flags:
-            print(items.LoanID)
             if items.LoanID==int(lid):
                 found=1
                 loan=items
@@ -574,42 +573,50 @@ def userpayloan():
             return jsonify({'message':'Loan Payment Successful.Loan Closed'}),201
         
         return jsonify({'message':'Loan Payment Successful'}),201
-
+    
+    
+    
 #Create Admin Route
 @app.route('/api/createadmin',methods=['POST'])
 def createadmin(): 
     data = request.get_json()
-
+    
     if data['MasterKey']!='1029384756':
         return jsonify({'message':'Inavlid Master Key'}),401
-
+    
     newadmin=Admin(
                         Name=data['Name'],
                         AdminID=data['AdminID'],
                         Password=data['Password']
                   )
-
+    
     db.session.add(newadmin)
     db.session.commit()
+    
+    return jsonify({'message':'New Admin Created Successfully'}),201
 
-    return jsonify({'message':'New Admin Created Successfully'}),201 
-        
-        
 
 #Close Account Route
 @app.route('/api/closeaccount',methods=['GET'])
 def closeaccount():
     data=request.args.get('AccountNo')
-
+    
     acc=Account.query.filter_by(AccountNo=data).first()
-
+    
     if not acc:
         return jsonify({'message':'Account Does Not Exist'}),401
-
+    
     db.session.delete(acc)
     db.session.commit()
-
-    return jsonify({'messsage':'Account Closed Successfully'}),201        
+    
+    return jsonify({'messsage':'Account Closed Successfully'}),201
+    
+    
+        
+        
+        
+        
+        
         
          
     
