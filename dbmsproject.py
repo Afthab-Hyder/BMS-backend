@@ -89,8 +89,9 @@ class Loan(db.Model):
     TotalAmount=db.Column(db.Integer,unique=False,nullable=False)
     FixedAmount=db.Column(db.Integer,unique=False,nullable=False)
     PaymentsRemaining=db.Column(db.Integer,unique=False,nullable=False)
-    UserID=db.Column(db.Integer,db.ForeignKey('users.UserID'),nullable=False,unique=False)
+    UserID=db.Column(db.Integer,nullable=False,unique=False)
     StartDate=db.Column(db.DateTime,default=datetime.utcnow)
+    Status=db.Column(db.String(12),default='Active')
     
     def __repr__(self):
         return f"Loan('{self.LoanID}')"
@@ -486,7 +487,8 @@ def loanapprove():
                             FixedAmount=data['FixedAmount'],
                             PaymentsRemaining=data['PaymentsRemaining'],
                             UserID=data['UserID'],
-                            StartDate=now
+                            StartDate=now,
+                            Status='Active'
                         )
             
             db.session.add(newloan)
@@ -500,11 +502,80 @@ def loanapprove():
             db.session.delete(loanreq)
             db.session.commit
             
-            return jsonify({'message':'Loan Approved Successfully'})
+            return jsonify({'message':'Loan Approved Successfully'}),201
         
         
         
         
+#User Pay Loan Route
+@app.route('/api/userpayloan',methods=['GET','POST'])
+def userpayloan():  
+    
+    if request.method=='GET':
+        
+        uid=request.args.get('UserID')
+        lid=request.args.get('LoanID')
+        
+        flags=Loan.query.filter_by(UserID=uid).all()
+        if not flags:
+            return jsonify({'message':'User Has No Active Loans'}),401
+        
+        found=0
+        
+        for items in flags:
+            if items.LoanID==lid:
+                found=1
+                loan=items
+                break
+        
+        if found==0:
+            return jsonify({'message':'LoanID Not Associated with Current User'}),401
+        
+        if loan:
+        
+            ser_loan={'LoanID':loan.LoanID,'TotalAmount':loan.TotalAmount,'FixedAmount':loan.FixedAmount,'PaymentsRemaining':loan.PaymentsRemaining,'Status':loan.Status}
+            if loan.Status=='Closed':
+                return jsonify({'Loan':ser_loan,'message':'Loan Already Closed'}),401
+            
+            return jsonify({'Loan':ser_loan}),201
+        
+        
+    if request.method=='POST':
+        data = request.get_json()
+        
+        acc=Account.query.filter_by(AccountNo=data['AccountNo']).first()
+        
+        if acc.UID!=data['UserID']:
+            return jsonify({'message':'Account does not belong to current User'}),401
+        
+        
+        if acc.Balance<data['FixedAmount']:
+            return jsonify({'message':'Account has Insufficient Balance'})
+        
+        loan=Loan.query.filter_by(LoanID=data['LoanID']).first()
+        
+        acc.Balance=acc.Balance-data['FixedAmount']
+        db.session.commit()
+        
+        loan.AmountRemaining=loan.AmountRemaining-data['FixedAmount']
+        db.session.commit()
+        loan.PaymentsRemaining=loan.PaymentsRemaining-1
+        db.session.commit()
+        if loan.PaymentsRemaining<=0:
+            loan.Status='Closed'
+            db.session.commit()
+            
+        if loan.Status=='Closed':
+            return jsonify({'message':'Loan Payment Successful.Loan Closed'}),201
+        
+        return jsonify({'message':'Loan Payent Successful'}),201
+        
+        
+        
+        
+        
+        
+         
     
     
 
