@@ -57,8 +57,8 @@ class Transaction(db.Model):
     
     
     TransactionID=db.Column(db.Integer,primary_key=True)
-    FromAccount=db.Column(db.Integer,db.ForeignKey('accounts.AccountNo'),unique=False,nullable=False)
-    ToAccount=db.Column(db.Integer,db.ForeignKey('accounts.AccountNo'),unique=False,nullable=False)
+    FromAccount=db.Column(db.Integer,unique=False,nullable=False)
+    ToAccount=db.Column(db.Integer,unique=False,nullable=False)
     AdminID=db.Column(db.Integer,db.ForeignKey('admins.AdminID'),unique=False,default=0)
     Type=db.Column(db.String(20),unique=False,nullable=False)
     Amount=db.Column(db.Integer,unique=False,nullable=False)
@@ -574,11 +574,42 @@ def userpayloan():
             return jsonify({'message':'Loan Payment Successful.Loan Closed'}),201
         
         return jsonify({'message':'Loan Payment Successful'}),201
+
+#Create Admin Route
+@app.route('/api/createadmin',methods=['POST'])
+def createadmin(): 
+    data = request.get_json()
+
+    if data['MasterKey']!='1029384756':
+        return jsonify({'message':'Inavlid Master Key'}),401
+
+    newadmin=Admin(
+                        Name=data['Name'],
+                        AdminID=data['AdminID'],
+                        Password=data['Password']
+                  )
+
+    db.session.add(newadmin)
+    db.session.commit()
+
+    return jsonify({'message':'New Admin Created Successfully'}),201 
         
         
-        
-        
-        
+
+#Close Account Route
+@app.route('/api/closeaccount',methods=['GET'])
+def closeaccount():
+    data=request.args.get('AccountNo')
+
+    acc=Account.query.filter_by(AccountNo=data).first()
+
+    if not acc:
+        return jsonify({'message':'Account Does Not Exist'}),401
+
+    db.session.delete(acc)
+    db.session.commit()
+
+    return jsonify({'messsage':'Account Closed Successfully'}),201        
         
          
     
