@@ -456,6 +456,8 @@ def loanapprove():
     
     if request.method=='GET':
         requests=LoanRequest.query.all()
+        if requests is None:
+            return jsonify({}),201
         ser_reqs=[serialize_request(req) for req in requests]
         return jsonify({'requests':ser_reqs}),201
     
