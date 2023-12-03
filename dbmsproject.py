@@ -73,7 +73,7 @@ class LoanRequest(db.Model):
     UserID=db.Column(db.Integer,db.ForeignKey('users.UserID'),primary_key=True)
     Amount=db.Column(db.Integer,unique=False,nullable=False)
     Duration=db.Column(db.Integer,unique=False,nullable=False)
-    FixedAmount=db.Column(db.Integer,unique=False,nullable=False)
+    FixedAmount=db.Column(db.Float,unique=False,nullable=False)
     Admin=db.Column(db.Integer,db.ForeignKey('admins.AdminID'),unique=False,nullable=False)
     Account=db.Column(db.Integer,unique=False,nullable=False)
     
@@ -85,9 +85,9 @@ class Loan(db.Model):
     __tablename__='loans'
     
     LoanID=db.Column(db.Integer,primary_key=True)
-    AmountRemaining=db.Column(db.Integer,unique=False,nullable=False)
+    AmountRemaining=db.Column(db.Float,unique=False,nullable=False)
     TotalAmount=db.Column(db.Integer,unique=False,nullable=False)
-    FixedAmount=db.Column(db.Integer,unique=False,nullable=False)
+    FixedAmount=db.Column(db.Float,unique=False,nullable=False)
     PaymentsRemaining=db.Column(db.Integer,unique=False,nullable=False)
     UserID=db.Column(db.Integer,nullable=False,unique=False)
     StartDate=db.Column(db.DateTime,default=datetime.utcnow)
