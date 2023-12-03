@@ -498,7 +498,7 @@ def loanapprove():
             db.session.commit()
             
             acc=Account.query.filter_by(AccountNo=data['AccountNo']).first()
-            acc.Balance=acc.AccountNo + data['TotalAmount']
+            acc.Balance=acc.Balance + data['TotalAmount']
             db.session.commit()
             
             loanreq=LoanRequest.query.filter_by(UserID=data['UserID']).first()
