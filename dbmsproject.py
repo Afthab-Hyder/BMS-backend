@@ -426,23 +426,23 @@ def deposit():
 def loanapply():
     data = request.get_json()
     
-    uid=LoanRequest.query.filter_by(UserID=data['UserID'])
+    uid=LoanRequest.query.filter_by(UserID=data['UserID']).first()
     
     if uid:
         return jsonify({'message':'User has a pending loan request'}),401
     
-    acc=Account.query.filter_by(AccountNo=data['Account']).first()
+    acc=Account.query.filter_by(AccountNo=data['AccountNo']).first()
     
-    if acc.UID!=data['UserID']:
+    if int(acc.UID)!=int(data['UserID']):
         return jsonify({'message':'Account Number not of Current User'}),401
     
     req = LoanRequest(
                             UserID=data['UserID'],
-                            Amount=data['Amount'],
-                            Duration=data['Duration'],
+                            Amount=data['TotalAmount'],
+                            Duration=data['NumberofPayments'],
                             FixedAmount=data['FixedAmount'],
                             Admin=0,
-                            Account=data['Account']       
+                            Account=data['AccountNo']       
                     )
     
     db.session.add(req)
