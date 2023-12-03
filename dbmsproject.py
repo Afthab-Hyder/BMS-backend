@@ -166,7 +166,7 @@ def logout():
 @app.route('/api/transactions',methods=['GET'])
 def transactions():
     data=request.args.get('AccountNo')
-    if data is None or data =='...':
+    if data =='...' or data is None:
         return jsonify({'Transactions':[{'Amount':'...'}]}),201
     from_trans=Transaction.query.filter_by(FromAccount=data).all()
     to_trans=Transaction.query.filter_by(ToAccount=data).all()
@@ -177,7 +177,7 @@ def transactions():
     ser_trans_from.sort(key=sortfunc)
     if(from_trans or to_trans):
         return jsonify({'Transactions':ser_trans_from})
-    return jsonify({[]}),
+    return jsonify({'Transactions':[]}),201
 
 
 
@@ -394,10 +394,10 @@ def withdraw():
     acc=Account.query.filter_by(AccountNo=data['AccountNo']).first()
     
     if not acc:
-        return jsonify({'message':'Invalid Account Number'}),401
+        return jsonify({'message':'Invalid Account Number'}),403
     
     if int(data['Amount'])>acc.Balance:
-        return jsonify({'message':'Insufficient Balance'}),401
+        return jsonify({'message':'Insufficient Balance'}),403
     
     acc.Balance=acc.Balance-int(data['Amount'])
     db.session.commit()
@@ -466,6 +466,9 @@ def loanapprove():
         data = request.get_json()
         
         if data['Reply']=='No':
+            loanreq=LoanRequest.query.filter_by(UserID=data['UserID']).first()
+            db.session.delete(loanreq)
+            db.session.commit()
             return jsonify({'message':'Loan Request Rejected'}),401
         
         if data['Reply']=='Yes':
@@ -495,12 +498,12 @@ def loanapprove():
             db.session.commit()
             
             acc=Account.query.filter_by(AccountNo=data['AccountNo']).first()
-            acc.AccountNo=acc.AccountNo + data['Amount']
+            acc.Balance=acc.AccountNo + data['TotalAmount']
             db.session.commit()
             
             loanreq=LoanRequest.query.filter_by(UserID=data['UserID']).first()
             db.session.delete(loanreq)
-            db.session.commit
+            db.session.commit()
             
             return jsonify({'message':'Loan Approved Successfully'}),201
         
