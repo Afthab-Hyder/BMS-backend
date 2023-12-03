@@ -522,7 +522,7 @@ def userpayloan():
         flags=Loan.query.filter_by(UserID=uid).all()
         if not flags:
             return jsonify({'message':'User Has No Active Loans'}),401
-        
+        print(lid)
         found=0
         
         for items in flags:
