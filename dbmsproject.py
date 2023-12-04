@@ -609,6 +609,9 @@ def adminpayloan():
         if not loan:
             return jsonify({'message':'Inavlid LoanID'}),401
         
+        if loan.PaymentsRemaining==0:
+            return jsonify({'message':'Loan Closed'})
+        
         
         
         ser_loan={'LoanID':loan.LoanID,'TotalAmount':loan.TotalAmount,'FixedAmount':loan.FixedAmount,'PaymentsRemaining':loan.PaymentsRemaining,'Status':loan.Status}
