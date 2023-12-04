@@ -198,10 +198,6 @@ def loanhistory():
 
 
 
-
-
-
-
 #User Transaction Payment Route
 @app.route('/api/userpayment',methods=['POST'])
 def userpayment():
@@ -520,6 +516,8 @@ def userpayloan():
         uid=request.args.get('UserID')
         lid=request.args.get('LoanID')
         
+        
+        
         flags=Loan.query.filter_by(UserID=uid).all()
         if not flags:
             return jsonify({'message':'User Has No Active Loans'}),401
@@ -532,11 +530,15 @@ def userpayloan():
                 found=1
                 loan=items
                 break
+            
         
         if found==0:
             return jsonify({'message':'LoanID Not Associated with Current User'}),401
         
         if loan:
+            
+            if loan.PaymentsRemaining==0:
+                return jsonify({'message':'Loan Closed'})
         
             ser_loan={'LoanID':loan.LoanID,'TotalAmount':loan.TotalAmount,'FixedAmount':loan.FixedAmount,'PaymentsRemaining':loan.PaymentsRemaining,'Status':loan.Status}
             if loan.Status=='Closed':
@@ -736,10 +738,6 @@ def sortfunc(x):
            x['Date']
     }
 
-    
-
-    
-    
 
 
 @app.route('/')
@@ -757,7 +755,6 @@ def initialize_database():
         except Exception as e:
             print(f"An error occurred while initializing the database: {e}")
             
-   
 
 
 if __name__=="__main__":
