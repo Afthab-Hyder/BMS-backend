@@ -674,11 +674,11 @@ def createadmin():
 
 
 #Close Account Route
-@app.route('/api/closeaccount',methods=['GET'])
+@app.route('/api/closeaccount',methods=['POST'])
 def closeaccount():
-    data=request.args.get('AccountNo')
+    data = request.get_json()
     
-    acc=Account.query.filter_by(AccountNo=data).first()
+    acc=Account.query.filter_by(AccountNo=data['AccountNo']).first()
     
     if not acc:
         return jsonify({'message':'Account Does Not Exist'}),401
