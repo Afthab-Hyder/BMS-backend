@@ -538,7 +538,7 @@ def userpayloan():
         if loan:
             
             if loan.PaymentsRemaining==0:
-                return jsonify({'message':'Loan Closed'})
+                return jsonify({'message':'Loan Closed'}),201
         
             ser_loan={'LoanID':loan.LoanID,'TotalAmount':loan.TotalAmount,'FixedAmount':loan.FixedAmount,'PaymentsRemaining':loan.PaymentsRemaining,'Status':loan.Status}
             if loan.Status=='Closed':
@@ -560,6 +560,9 @@ def userpayloan():
             return jsonify({'message':'Account has Insufficient Balance'}),401
         
         loan=Loan.query.filter_by(LoanID=data['LoanID']).first()
+        
+        if loan.PaymentsRemaining<1:
+            return jsonify({'message':'Loan Already Closed'}),401
         
         acc.Balance=acc.Balance-int(data['FixedAmount'])
         db.session.commit()
@@ -610,7 +613,7 @@ def adminpayloan():
             return jsonify({'message':'Inavlid LoanID'}),401
         
         if loan.PaymentsRemaining==0:
-            return jsonify({'message':'Loan Closed'})
+            return jsonify({'message':'Loan Closed'}),201
         
         
         
@@ -634,6 +637,9 @@ def adminpayloan():
             return jsonify({'message':'Account has Insufficient Balance'}),401
         
         loan=Loan.query.filter_by(LoanID=data['LoanID']).first()
+        
+        if loan.PaymentsRemaining<1:
+            return jsonify({'message':'Loan Already Closed'}),401
         
         acc.Balance=acc.Balance-int(data['FixedAmount'])
         db.session.commit()
