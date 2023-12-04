@@ -660,6 +660,11 @@ def createadmin():
     if data['MasterKey']!='1029384756':
         return jsonify({'message':'Inavlid Master Key'}),401
     
+    flag=Admin.query.filter_by(AdminID=data['AdminID']).first()
+    
+    if flag:
+        return jsonify({'message':'Given AdminID already exists'}),401
+    
     newadmin=Admin(
                         Name=data['Name'],
                         AdminID=data['AdminID'],
