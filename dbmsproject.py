@@ -536,12 +536,9 @@ def userpayloan():
             return jsonify({'message':'LoanID Not Associated with Current User'}),401
         
         if loan:
-            
-            if loan.PaymentsRemaining==0:
-                return jsonify({'message':'Loan Closed'}),201
         
             ser_loan={'LoanID':loan.LoanID,'TotalAmount':loan.TotalAmount,'FixedAmount':loan.FixedAmount,'PaymentsRemaining':loan.PaymentsRemaining,'Status':loan.Status}
-            if loan.Status=='Closed':
+            if loan.Status=='Closed' or loan.PaymentsRemaining==0:
                 return jsonify({'Loan':ser_loan,'message':'Loan Already Closed'}),401
             
             return jsonify({'Loan':ser_loan}),201
@@ -611,14 +608,10 @@ def adminpayloan():
         
         if not loan:
             return jsonify({'message':'Inavlid LoanID'}),401
-        
-        if loan.PaymentsRemaining==0:
-            return jsonify({'message':'Loan Closed'}),201
-        
-        
+
         
         ser_loan={'LoanID':loan.LoanID,'TotalAmount':loan.TotalAmount,'FixedAmount':loan.FixedAmount,'PaymentsRemaining':loan.PaymentsRemaining,'Status':loan.Status}
-        if loan.Status=='Closed':
+        if loan.Status=='Closed' or loan.PaymentsRemaining==0:
             return jsonify({'Loan':ser_loan,'message':'Loan Already Closed'}),401
             
         return jsonify({'Loan':ser_loan}),201
