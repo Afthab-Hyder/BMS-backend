@@ -577,6 +577,77 @@ def userpayloan():
     
     
     
+#Admin Pay Loan Route
+@app.route('/api/adminpayloan',methods=['GET','POST'])
+def adminpayloan():  
+    
+    if request.method=='GET':
+        
+        #uid=request.args.get('UserID')
+        lid=request.args.get('LoanID')
+        
+        # flags=Loan.query.filter_by(UserID=uid).all()
+        # if not flags:
+        #     return jsonify({'message':'User Has No Active Loans'}),401
+        # print(lid)
+        # found=0
+        # print("hi")
+        # for items in flags:
+        #     print(items.LoanID)
+        #     if items.LoanID==int(lid):
+        #         found=1
+        #         loan=items
+        #         break
+        
+        # if found==0:
+        #     return jsonify({'message':'LoanID Not Associated with Current User'}),401
+        
+        loan=Loan.query.filter_by(LoanID=lid).first()
+        
+        if not loan:
+            return jsonify({'message':'Inavlid LoanID'}),401
+        
+        
+        
+        ser_loan={'LoanID':loan.LoanID,'TotalAmount':loan.TotalAmount,'FixedAmount':loan.FixedAmount,'PaymentsRemaining':loan.PaymentsRemaining,'Status':loan.Status}
+        if loan.Status=='Closed':
+            return jsonify({'Loan':ser_loan,'message':'Loan Already Closed'}),401
+            
+        return jsonify({'Loan':ser_loan}),201
+        
+        
+    if request.method=='POST':
+        data = request.get_json()
+        
+        acc=Account.query.filter_by(AccountNo=data['AccountNo']).first()
+        
+        # if acc.UID!=int(data['UserID']):
+        #     return jsonify({'message':'Account does not belong to current User'}),401
+        
+        
+        if acc.Balance<int(data['FixedAmount']):
+            return jsonify({'message':'Account has Insufficient Balance'}),401
+        
+        loan=Loan.query.filter_by(LoanID=data['LoanID']).first()
+        
+        acc.Balance=acc.Balance-int(data['FixedAmount'])
+        db.session.commit()
+        
+        loan.AmountRemaining=loan.AmountRemaining-int(data['FixedAmount'])
+        db.session.commit()
+        loan.PaymentsRemaining=loan.PaymentsRemaining-1
+        db.session.commit()
+        if loan.PaymentsRemaining<=0:
+            loan.Status='Closed'
+            db.session.commit()
+            
+        if loan.Status=='Closed':
+            return jsonify({'message':'Loan Payment Successful.Loan Closed'}),201
+        
+        return jsonify({'message':'Loan Payment Successful'}),201
+    
+    
+    
 #Create Admin Route
 @app.route('/api/createadmin',methods=['POST'])
 def createadmin(): 
