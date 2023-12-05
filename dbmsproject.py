@@ -679,7 +679,7 @@ def createaccount():
     data = request.get_json()
     
     user=User.query.filter_by(UserID=data['UserID']).first()
-    acc=Account.query.filter_by(AccountNp=data['AccountNo']).first()
+    acc=Account.query.filter_by(AccountNo=data['AccountNo']).first()
     
     if not user:
         return jsonify({'message':'Given UserID does not exist'}),401
