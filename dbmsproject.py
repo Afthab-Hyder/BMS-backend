@@ -325,10 +325,6 @@ def createuser():
             return jsonify({'message':'UserID Already Exists'}),401
         if aflag:
             return jsonify({'message':'Account Number Already Exists'}),401
-
-            
-            
-        
         
         newuser=User(
                                 UserID=data['UserID'],
@@ -683,9 +679,14 @@ def createaccount():
     data = request.get_json()
     
     user=User.query.filter_by(UserID=data['UserID']).first()
+    acc=Account.query.filter_by(AccountNp=data['AccountNo']).first()
     
     if not user:
         return jsonify({'message':'Given UserID does not exist'}),401
+    
+    if acc:
+        return jsonify({'message':'Given Account Number already exists'}),401
+        
     
     newacc=Account(
                         AccountNo=data['AccountNo'],
@@ -718,8 +719,6 @@ def closeaccount():
     return jsonify({'messsage':'Account Closed Successfully'}),201
     
     
-        
-        
 
 def serialize_account(account):
     return {
