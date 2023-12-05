@@ -751,7 +751,8 @@ def serialize_loan(loan):
                 'FixedAmount':loan.FixedAmount,
                 'PaymentsRemaining':loan.PaymentsRemaining,
                 'UserID':loan.UserID,
-                'StartDate':loan.StartDate
+                'StartDate':loan.StartDate,
+                'Status':loan.Status
     }
     
 def serialize_request(req):
