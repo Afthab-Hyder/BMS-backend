@@ -83,7 +83,7 @@ class LoanRequest(db.Model):
     
     
 class Loan(db.Model):
-    __tablename__='loans'
+    __tablename__='loans' 
     
     LoanID=db.Column(db.Integer,primary_key=True)
     AmountRemaining=db.Column(db.Float,unique=False,nullable=False)
@@ -106,6 +106,10 @@ from flask import request, jsonify
 def userlogin():
     data = request.get_json()
     user = User.query.filter_by(UserID=data['UserID']).first()
+    if not user:
+        return jsonify({'message':'User Does Not Exist'}),401
+    if data['Password']!=user.Password:
+        return jsonify({'message':'Invalid Credentials'}),401
     accdetails=Account.query.filter_by(UID=data['UserID']).all()
     ser_acc = [makearray_account(account) for account in accdetails]
     loanaccdetails=Account.query.filter(and_(Account.UID==data['UserID'],Account.Type=='Loan')).all()
@@ -129,9 +133,17 @@ def userlogin():
 def adminlogin():
     data = request.get_json()
     admin = Admin.query.filter_by(AdminID=data['AdminID']).first()
+    if not admin:
+        return jsonify({'message':'Admin Does Not Exist'}),401
+    if data['Password']!=admin.Password:
+        return jsonify({'message':'Invalid Credentials'}),401
+    # if admin and admin.Password == data['Password']:
+    #     return jsonify({'message': 'Login successful', 'AdminID': admin.AdminID})
+    # return jsonify({'message': 'Invalid username or password'}), 401
+    loanaccdetails=Account.query.filter_by(Type='Loan').all()
+    ser_loan=[makearray_loan(loanaccount) for loanaccount in loanaccdetails]
     if admin and admin.Password == data['Password']:
-        return jsonify({'message': 'Login successful', 'AdminID': admin.AdminID})
-    return jsonify({'message': 'Invalid username or password'}), 401
+        return jsonify({'LoanAccountNo':ser_loan}),201
 
 
 #User Details Route
@@ -195,6 +207,22 @@ def loanhistory():
     if(loans):
         return jsonify({'Loans':ser_loans}),201
     return jsonify({[]}),
+
+
+# #Admin Loan History Route
+# @app.route('/api/adminloanhistory',methods=['GET'])
+# def adminloanhistory():
+#     data=request .ars.get('LoanID')
+    
+#     loan=Loan.query.filter_by(LoanID=data).first()
+    
+#     if not loan:
+#         return jsonify({'message':'Invalid LoanID'}),401
+    
+#     details={'UserID':loan.UserID,'TotalAmount':loan.TotalAmount,'FixedAmount':loan.FixedAmount,'PaymentsRemaining':loan.PaymentsRemaining,
+#              'LoanID':loan.LoanID,'Status':loan.Status,'AmountRemaining':loan.AmountRemaining,'StartDate':loan.StartDate}
+    
+#     return jsonify({'details':details}),201
 
 
 
