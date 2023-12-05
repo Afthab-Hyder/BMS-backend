@@ -677,6 +677,31 @@ def createadmin():
     return jsonify({'message':'New Admin Created Successfully'}),201
 
 
+#Create Account Route
+@app.route('/api/createaccount',methods=['POST'])
+def createaccount():
+    data = request.get_json()
+    
+    user=User.query.filter_by(UserID=data['UserID']).first()
+    
+    if not user:
+        return jsonify({'message':'Given UserID does not exist'}),401
+    
+    newacc=Account(
+                        AccountNo=data['AccountNo'],
+                        Type=data['Type'],
+                        Balance=0,
+                        UID=data['UserID']
+    )
+    
+    db.session.add(newacc)
+    db.session.commit()
+    
+    return jsonify({'message':'Account Created Successfully'}),201
+
+
+
+
 #Close Account Route
 @app.route('/api/closeaccount',methods=['POST'])
 def closeaccount():
